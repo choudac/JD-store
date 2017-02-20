@@ -5,6 +5,18 @@ class Order < ApplicationRecord
     self.token = SecureRandom.uuid
   end
 
+  def wechat_pay!
+    self.payment_method = "微信"
+    self.is_paid = true
+    self.save
+  end
+
+  def alipay_pay!
+    self.payment_method = "支付宝"
+    self.is_paid = true
+    self.save
+  end
+
   belongs_to :user
 
   validates :billing_name, presence: true
@@ -25,7 +37,7 @@ class Order < ApplicationRecord
     state :good_returned
 
 
-    event :make_payment, after_commit: :pay! do
+    event :make_payment do
       transitions from: :order_placed, to: :paid
     end
 
@@ -44,5 +56,5 @@ class Order < ApplicationRecord
     event :cancell_order do
       transitions from: [:order_placed, :paid], to: :order_cancelled
     end
+  end
 end
-end 

@@ -31,20 +31,29 @@ class OrdersController < ApplicationController
   end
 
   def pay_with_alipay
-      @order = Order.find_by_token(params[:id])
-      @order.set_payment_with!("alipay")
+    @order = Order.find_by_token(params[:id])
+    if @order.is_paid == false
+      @order.alipay_pay!
       @order.make_payment!
-
-      redirect_to order_path(@order.token), notice: "使用支付宝成功完成付款"
+      OrderMailer.notify_order_placed(@order).deliver!
+      redirect_to order_path(@order.token)
+    else
+      flash[:alert] = '您已经付款了哦'
+        redirect_to :back
     end
-
+  end
     def pay_with_wechat
-      @order = Order.find_by_token(params[:id])
-      @order.set_payment_with!("wechat")
+    @order = Order.find_by_token(params[:id])
+    if @order.is_paid == false
+      @order.wechat_pay!
       @order.make_payment!
-
-      redirect_to order_path(@order.token), notice: "使用微信支付成功完成付款"
+      OrderMailer.notify_order_placed(@order).deliver!
+      redirect_to order_path(@order.token)
+    else
+      flash[:alert] = '您已经付款了'
+        redirect_to :back
     end
+  end
 
     def apply_to_cancel
     @order = Order.find(params[:id])
